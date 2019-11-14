@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Resource Library</title>
+</head>
+<body>
+      
+
+    <% fileArray.forEach(function(file) { %>
+
+        <a href="/file/<%= file.filename %>"download="<%= file.originalname %>" class="downloadFile"></a>
+
+    <% }) %>
+
+
+    <script>
+        window.onload = function(){
+           var file = document.getElementsByClassName('downloadFile')
+
+           for(i=0;i<file.length;i++){
+                file[i].click()
+           }
+
+        }
+    </script>
+</body>
+</html>

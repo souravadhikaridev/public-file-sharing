@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Resource Library</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=5dc76441ecdc9500121093f5&product=inline-share-buttons' async='async'></script>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+ <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.js" integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>  
+
+    <style>
+        #idFile{
+        opacity:0
+    }
+    input, .btn{
+        box-shadow: none !important;
+    }
+    </style>
+</head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow sticky-top">
+        <a class="navbar-brand" href="/" style="font-size: 25px">Resource<b>Library</b></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+    <div class="container border shadow-lg"
+    style="height: 85vh;margin-top: 10px;"
+     placeholder="Upload File(s)"
+    >
+    
+    <h1 class="text-center mt-5" id="uploadtxt" style="color: #8395A7;">
+        Upload File(s)
+    </h1>
+    <center>
+        <button class="btn btn-primary mt-5" id="btnUpload" style="position: absolute;margin-left: -50px;">
+            Upload File
+        </button>
+    </center>
+    <center>
+        <input type="file" class="mt-5 ml-5" id="idFile" onchange="fileUpload(event)"
+         multiple>
+    </center>
+    <div class="container dropzone" id="dropzone" style="border: 2px dotted #c1c1c1; margin-top: 20px;">
+            <h4 class="text-center mt-5" id="dragTxt" style="height:20vh;color: #8395A7;">
+                    or Drop file(s) here to upload
+                </h4>
+    </div>
+    <div class="container">
+        <div class="col-row">
+            <div class="col-12">
+                <h5 class="mt-1" style="color: #8395A7;">Sharable URL & Qrcode : </h5>
+            </div>
+        </div>
+            <div class="row">
+                <div class="col-6 d-none" id="divShareLink">
+                    <div class="row">
+                        <div class="col-7">
+                                <input type="text" class="form-control text-center" id="idShareLink"
+                                readonly>
+                        </div>
+                        <div class="col-5">
+                            <button class="btn btn-success" onclick="copyURL(event)">copy URL</button>
+                        </div>
+                    </div>
+                </div>
+               <div class="col-3">
+                    <a href="#" download="qrcode.png" id="qrcodeLink">
+                        <div class="mt-1 d-flex justify-content-start" id="output"></div>
+                    </a>
+               </div>
+               <!-- <div class="col-2 d-none"id="btnShareLink">
+                    <div class="sharethis-inline-share-buttons"></div>
+               </div> -->
+            </div>
+        </div>
+    </div>
+    <script src="/js/qrcode.min.js"></script>
+
+    <script>
+        //disabel back button
+        window.location.hash = "no-back-button";
+        window.location.hash ="Again-No-back-button"; //again because google chrome don't insert first hash into history
+        window.onhashchange = function () {
+            window.location.hash = "no-back-button";
+        }
+        function fileUpload( event ){
+           event.preventDefault()
+           
+           $(document).ready(function(){
+                var $data = new FormData();
+                var files = $("#idFile").get(0).files;
+               
+                for( i=0;i<files.length;i++ ){
+                    $data.append('uploadfile', files[i]);
+                }
+                $.ajax({
+                    xhr: function () {
+                        var xhr = new window.XMLHttpRequest();
+
+                        xhr.upload.addEventListener("progress", function (evt) {
+                            if (evt.lengthComputable) {
+                                var percentComplete = evt.loaded / evt.total;
+                                percentComplete = parseInt(percentComplete * 100);
+                                $('#uploadtxt').html('Uploading...')
+                                $("#idFile").attr('readonly')
+                                $("#btnUpload").html(percentComplete + ' % complete')
+                                if (percentComplete === 100) {
+                                    $('#uploadtxt').html('Upload File(s)')
+                                    $("#idFile").removeAttr('readonly')
+                                    $("#btnUpload").html('Upload File')    
+                                }
+                            }
+                        }, false);
+
+                        return xhr;
+                    },
+                    method: "POST",
+                    url: "/api/auth/myResource/resourcelibrary/uploadfile",
+                    data: $data,
+                    contentType: false,
+                    processData: false,
+                    catch: false,
+                    success: function(responce){
+                        if( responce.success === true ){
+                            $("#output").html('')
+                            $("#divShareLink").removeClass('d-none')
+                            $("#btnShareLink").removeClass('d-none')
+                            $("#idShareLink").val('http://127.0.0.1:/'+responce.code)
+
+                            let qrcode = new QRCode("output",{
+                                text: 'http://127.0.0.1:/'+responce.code,
+                                width: 150,
+                                height: 150,
+                                colorDark : "#990000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.H,
+                            })
+                            document.getElementById('qrcodeLink').click()
+                        }
+                       
+                    }
+                })
+            })
+        }
+
+        //drag and drop file(s)
+        var dropzone = document.getElementById('dropzone')
+
+        dropzone.ondrop = function(event){
+            event.preventDefault()
+            this.className = "dropzone"
+            
+            uploadFiles( event.dataTransfer.files )
+        }
+
+        dropzone.ondragover = function(){
+            this.className = "dropzone dragover"
+            return false
+        }
+        dropzone.ondragleave = function(){
+            this.className = "dropzone"
+            return false
+        }
+        
+        function uploadFiles( files ){
+
+            var $data = new FormData();
+            console.log(files)
+            for( i=0;i<files.length;i++ ){
+                    $data.append('uploadfile', files[i]);
+                }
+                $("#dragTxt").html( files.length + 'file(s) dropped' )
+                $.ajax({
+                    xhr: function () {
+                        var xhr = new window.XMLHttpRequest();
+
+                        xhr.upload.addEventListener("progress", function (evt) {
+                            if (evt.lengthComputable) {
+                                var percentComplete = evt.loaded / evt.total;
+                                percentComplete = parseInt(percentComplete * 100);
+                                $("#idFile").attr('readonly')
+                                $("#dragTxt").html('Uploading...' )
+                                $("#btnUpload").html(percentComplete + ' % complete')
+                                if (percentComplete === 100) {
+                                    $("#idFile").removeAttr('readonly')
+                                    $("#btnUpload").html('Upload File') 
+                                    $("#dragTxt").html( 'or Drop file(s) here to upload' )   
+                                }
+                            }
+                        }, false);
+
+                        return xhr;
+                    },
+                    method: "POST",
+                    url: "/api/auth/myResource/resourcelibrary/uploadfile",
+                    data: $data,
+                    contentType: false,
+                    processData: false,
+                    catch: false,
+                    success: function(responce){
+                        if( responce.success === true ){
+                            $("#output").html('')
+                            $("#divShareLink").removeClass('d-none')
+                            $("#btnShareLink").removeClass('d-none')
+                            $("#idShareLink").val('http://127.0.0.1:/'+responce.code)
+                        }
+                        let qrcode = new QRCode("output",{
+                                text: 'http://127.0.0.1:/'+responce.code,
+                                width: 150,
+                                height: 150,
+                                colorDark : "#990000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.H
+                            })
+                            var myqrcode = document.getElementById('qrcodeLink')
+                            // var qrimg = document.getElementsByTagName('img');
+                            // myqrcode.setAttribute('href',qrimg[0].src)
+                            myqrcode.click()
+                    }
+                })
+        }
+        
+        function copyURL(event){
+            event.preventDefault()
+
+            var url = document.getElementById('idShareLink')
+            url.select()
+            document.execCommand('copy')
+        }
+
+    </script>
+  </body>
+</html>
